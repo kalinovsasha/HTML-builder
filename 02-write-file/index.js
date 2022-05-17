@@ -6,6 +6,7 @@ const process = require('process');
 const filePath = path.join(__dirname,'file.txt');
 const rl = readline.createInterface({ input:process.stdin, output:process.stdout});
 const stream = fs.createWriteStream (filePath);
+console.log("Hello, print something")
 
 rl.on('SIGINT', () => {
     console.log(`Файл ${filePath} создан!`);
