@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint-fix-read": "eslint ./01-read-file --fix",
     "lint-fix-write": "eslint ./02-write-file --fix",
-    "lint-fix-files": "eslint ./03-files-in-folder --fix"
+    "lint-fix-files": "eslint ./03-files-in-folder --fix",
+    "lint-fix-copy": "eslint ./04-copy-directory --fix"
   },
   "author": "evgeniimal",
   "license": "ISC",
