@@ -33,7 +33,7 @@ fs.access(filesCopy, fs.F_OK, (err) => {
     fs.readdir(filesPath, 'utf8', (err, files) => {
       if (err) throw err;
       files.forEach((file)=>{
-        fs.stat(path.join(filesPath, file),(err, data) => {
+        fs.stat(path.join(filesPath, file),(err, data) => { //isFile
           if(data.isFile()){
             fs.readFile(path.join(filesPath, file), 'utf-8', (err, data) => {
               if(err){

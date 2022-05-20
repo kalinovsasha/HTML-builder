@@ -8,7 +8,8 @@
     "lint-fix-read": "eslint ./01-read-file --fix",
     "lint-fix-write": "eslint ./02-write-file --fix",
     "lint-fix-files": "eslint ./03-files-in-folder --fix",
-    "lint-fix-copy": "eslint ./04-copy-directory --fix"
+    "lint-fix-copy": "eslint ./04-copy-directory --fix",
+    "lint-fix-merge": "eslint ./05-merge-styles --fix"
   },
   "author": "evgeniimal",
   "license": "ISC",
