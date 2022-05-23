@@ -3,6 +3,41 @@ const path = require('path');
 const filesCopy=path.join(__dirname, 'files-copy');
 const filesPath =path.join(__dirname, 'files');
 
+function copyFiles(src,dst){
+  //*Copy files in dir
+  fs.readdir(src, {withFileTypes: true}, (error, files) => {
+    files.forEach((file)=>{
+      if(file.isFile()){
+        fs.copyFile(path.join(src,file.name),path.join(dst,file.name),(err) => {
+          if (err) throw err;});
+      } else {
+        fs.mkdir(path.join(dst,file.name), { recursive: true }, (err) => {
+          if (err) throw err;
+          this.__copyFiles(path.join(src,file.name),path.join(dst,file.name));
+        });
+      }  
+    });
+  }   
+  );
+}
+fs.mkdir(path.join(filesCopy), { recursive: true }, (err) => {
+  if (err) throw err;
+  copyFiles(filesPath,filesCopy);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 fs.access(filesCopy, fs.F_OK, (err) => {
   if (err) {
     fs.mkdir(filesCopy, { recursive: true }, (err) => {
@@ -51,3 +86,4 @@ fs.access(filesCopy, fs.F_OK, (err) => {
   }
 });
 
+*/
