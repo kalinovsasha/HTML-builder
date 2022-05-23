@@ -1,6 +1,4 @@
-const pr = require('process');
 const fs = require('fs');
-const fsPr= require('fs/promises');
 const path = require('path');
 
 class ProjectBuilder{
@@ -16,26 +14,22 @@ class ProjectBuilder{
     this.assetsPath=assetsPath;
     this.distAssetsPath = path.join(projectDistPath,'assets');
   }
-
   __copyFiles(src,dst){
     //*Copy files in dir
     fs.readdir(src, {withFileTypes: true}, (error, files) => {
-      try {
-        files.forEach((file)=>{
-          if(file.isFile()){
-            fs.copyFile(path.join(src,file.name),path.join(dst,file.name),(err) => {
-              if (err) throw err;});
-          } else {
-            fs.mkdir(path.join(dst,file.name), { recursive: true }, (err) => {
-              if (err) throw err;
-              this.__copyFiles(path.join(src,file.name),path.join(dst,file.name));
-            });
-          }  
-        });
-      } catch (error) {
-        throw error; 
-      }
-    });
+      files.forEach((file)=>{
+        if(file.isFile()){
+          fs.copyFile(path.join(src,file.name),path.join(dst,file.name),(err) => {
+            if (err) throw err;});
+        } else {
+          fs.mkdir(path.join(dst,file.name), { recursive: true }, (err) => {
+            if (err) throw err;
+            this.__copyFiles(path.join(src,file.name),path.join(dst,file.name));
+          });
+        }  
+      });
+    } 
+    );
   }
   __collectStyles(src,dst){
     const stream = fs.createWriteStream (path.join(dst,'style.css'));
@@ -49,10 +43,52 @@ class ProjectBuilder{
       });
     });
   }
+  __generateHtml(){
+    //Генератор html
+    let templateDataArr=[];
+    let  templateNamesArr=[];
 
+    fs.readdir((path.join(__dirname, 'components')), {withFileTypes: true}, (error, files) => {
+      files.forEach((file)=>{
+        templateNamesArr.push(`{{${file.name.slice(0,file.name.indexOf('.'))}}}`);
+        templateDataArr.push(
+          new Promise(function(resolve) {
+            const stream = fs.createReadStream(path.join(__dirname, 'components',file.name), 'utf8');
+            let data = '';
+            stream.on('data', chunk => data += chunk);
+            stream.on('error', err => process.stdout.write(`\nError ${err.message}`));
+            stream.on('end', () => 
+            {
+              resolve(data);
+            }
+            );
+          })
+        );
+      });
+      //console.log(templateNamesArr);
+      Promise.all(templateDataArr).then((template)=>{
+        const stream = fs.createReadStream(path.join(__dirname, './template.html'), 'utf8');
+        const stream2 = fs.createWriteStream(path.join(projectDistPath, './index.html'), 'utf8');
+        let data = '';
+        stream.on('data', chunk => data += chunk);
+        stream.on('error', err => process.stdout.write(`\nError ${err.message}`));
+        stream.on('end', () => 
+        {
+          for(let i=0;i<templateNamesArr.length;i+=1){
+            data=data.replace(new RegExp( templateNamesArr[i],'g'), template[i]);
+            if(i===templateNamesArr.length-1){
+              stream2.write(data);
+            }
+          }
+        }
+        );
+      });
+    });
+  }
   make(){
     this.__copyFiles(this.assetsPath,this.distAssetsPath);
     this.__collectStyles(this.stylesPath,this.projectDistPath);
+    this.__generateHtml();
   }
 }
 
@@ -60,13 +96,26 @@ class ProjectBuilder{
 const stylesPath=path.join(__dirname,'styles');
 const assetsPath = path.join(__dirname,'assets');
 const projectDistPath = path.join(__dirname,'project-dist');
-const distAssetsPath = path.join(projectDistPath,'assets');
-const distHtml =path.join(projectDistPath,'index.html');
 
-const projectBuilder = new ProjectBuilder(projectDistPath,assetsPath,stylesPath);
-projectBuilder.make();
+fs.promises.rm(projectDistPath,{ recursive: true, force: true }).then(()=>{
+  const projectBuilder = new ProjectBuilder(projectDistPath,assetsPath,stylesPath);
+  projectBuilder.make();
+});
 
-/// Начало костылей, если успею, то переделаю
+
+
+
+
+
+
+
+
+
+
+
+
+/*//Old solutions
+
 let articles = new Promise(function(resolve, reject) {
   const stream = fs.createReadStream(path.join(__dirname, 'components','./articles.html'), 'utf8');
   let data = '';
@@ -101,39 +150,31 @@ let footer = new Promise(function(resolve, reject) {
   );
 });
 
-///Пока на костылях
+
 Promise.all([header,articles,footer]).then((template)=>{
   const stream = fs.createReadStream(path.join(__dirname, './template.html'), 'utf8');
   const stream2 = fs.createWriteStream(path.join(projectDistPath, './index.html'), 'utf8');
   const header = '{{header}}';
   const footer = '{{footer}}';
   const articles = '{{articles}}';
+  let arr=[header,articles,footer];
   let data = '';
   stream.on('data', chunk => data += chunk);
   stream.on('error', err => process.stdout.write(`\nError ${err.message}`));
   stream.on('end', () => 
   {
-    stream2.write(
-      data.slice(0,data.indexOf(header))+
-            template[0]+
-            data.slice(data.indexOf(header)+header.length,data.indexOf(articles))+
-            template[1]+
-            data.slice(data.indexOf(articles)+articles.length,data.indexOf(footer))+
-            template[2]+
-            data.slice(data.indexOf(footer)+footer.length)
-    );
+    for(let i=0;i<arr.length;i+=1){
+      data=data.replace(new RegExp( arr[i],'g'), template[i]);
+      if(i===arr.length-1){
+        stream2.write(data);
+      }
+    }
   }
   );
 });
 
 
-
-
-
-
-
-
-
+*/
 
 /*
  let template = new Promise(function(resolve, reject) {
@@ -161,6 +202,7 @@ Promise.all([header,articles,footer]).then((template)=>{
     );
   });
 */
+
 
 /*RemoveDir
 fs.rm(projectDistPath,{ recursive: true, force: true },(err) => {
