@@ -20,13 +20,13 @@ function copyFiles(src,dst){
   }   
   );
 }
-fs.mkdir(path.join(filesCopy), { recursive: true }, (err) => {
-  if (err) throw err;
-  copyFiles(filesPath,filesCopy);
+
+fs.promises.rm(filesCopy,{ recursive: true, force: true }).then(()=>{
+  fs.mkdir(filesCopy, { recursive: true }, (err) => {
+    if (err) throw err;
+    copyFiles(filesPath,filesCopy);
+  });
 });
-
-
-
 
 
 
